@@ -69,4 +69,14 @@
 - Vite build: ✅ 16 modules, 0 errors
 - Committed 15 files (2845 insertions), pushed to `agent-b/ui-and-puzzles`
 - Created PR #1: `agent-b/ui-and-puzzles` → `main`
->>>>>>> origin/main
+
+## 2026-02-24 — Integration
+
+- Merged PR #1 (Agent B) and PR #2 (Agent A) into `main`
+- Resolved work-log merge conflict
+- Replaced mock objects with `registerAllObjects()` — 15 real game object classes
+- Wired `PhysicsEngine` + `GameLoop` into play/pause/reset controls
+- Vite build: ✅ 37 modules, 0 errors
+- 22 unit tests pass
+- Pushed integration commit to `main`
+
