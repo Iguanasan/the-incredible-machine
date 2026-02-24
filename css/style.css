@@ -1,0 +1,308 @@
+/* =============================================
+   The Incredible Machine — Web Clone
+   Style Sheet
+   ============================================= */
+
+/* ---------- CSS Custom Properties ---------- */
+:root {
+  /* Original TIM-inspired color palette */
+  --bg-primary: #c0c0c0;         /* Classic gray window background */
+  --bg-playfield: #e8e0d0;       /* Warm off-white playfield */
+  --bg-toolbox: #8080a0;         /* Muted blue-gray toolbox */
+  --bg-controls: #6060a0;        /* Darker blue-gray for top bar */
+
+  --border-frame: #404040;       /* Dark border for panels */
+  --border-light: #ffffff;       /* Light bevel highlight */
+  --border-dark: #303030;        /* Dark bevel shadow */
+
+  --text-primary: #202020;       /* Near-black text */
+  --text-light: #f0f0f0;         /* Light text on dark backgrounds */
+  --text-accent: #ffd700;        /* Gold for titles/highlights */
+
+  --color-success: #4caf50;      /* Green for win */
+  --color-warning: #ff9800;      /* Orange for hints */
+  --color-danger: #f44336;       /* Red for errors */
+
+  --toolbox-width: 220px;
+  --control-bar-height: 52px;
+  --font-family: 'Segoe UI', 'Arial', sans-serif;
+  --font-game: 'Georgia', 'Times New Roman', serif;
+
+  --shadow-inset: inset 2px 2px 0 var(--border-dark), inset -2px -2px 0 var(--border-light);
+  --shadow-outset: 2px 2px 0 var(--border-dark), -1px -1px 0 var(--border-light);
+}
+
+/* ---------- Reset & Base ---------- */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-family);
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+}
+
+/* ---------- App Layout (CSS Grid) ---------- */
+#app {
+  display: grid;
+  grid-template-columns: var(--toolbox-width) 1fr;
+  grid-template-rows: var(--control-bar-height) 1fr;
+  grid-template-areas:
+    "controls controls"
+    "toolbox  canvas";
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- Control Bar ---------- */
+#control-bar {
+  grid-area: controls;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: var(--bg-controls);
+  border-bottom: 3px solid var(--border-frame);
+  box-shadow: var(--shadow-outset);
+  z-index: 10;
+}
+
+#level-info {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+#game-title {
+  font-family: var(--font-game);
+  font-size: 20px;
+  color: var(--text-accent);
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  letter-spacing: 1px;
+}
+
+#level-name {
+  font-size: 14px;
+  color: var(--text-light);
+  opacity: 0.8;
+}
+
+#play-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- Toolbox ---------- */
+#toolbox {
+  grid-area: toolbox;
+  background: var(--bg-toolbox);
+  border-right: 3px solid var(--border-frame);
+  padding: 8px;
+  overflow-y: auto;
+  box-shadow: var(--shadow-outset);
+}
+
+#toolbox h2 {
+  font-family: var(--font-game);
+  font-size: 16px;
+  color: var(--text-light);
+  text-align: center;
+  padding: 6px 0 10px;
+  border-bottom: 2px solid var(--border-frame);
+  margin-bottom: 8px;
+}
+
+/* Toolbox category group */
+.toolbox-category {
+  margin-bottom: 10px;
+}
+
+.toolbox-category-title {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.7;
+  padding: 4px 0;
+}
+
+/* Individual toolbox item */
+.toolbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  margin: 2px 0;
+  border-radius: 4px;
+  cursor: grab;
+  transition: background 0.15s;
+  border: 2px solid transparent;
+}
+
+.toolbox-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.toolbox-item:active {
+  cursor: grabbing;
+}
+
+.toolbox-item.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.toolbox-item-icon {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-frame);
+  border-radius: 3px;
+  background: var(--bg-playfield);
+}
+
+.toolbox-item-name {
+  font-size: 12px;
+  color: var(--text-light);
+  flex: 1;
+}
+
+.toolbox-item-count {
+  font-size: 11px;
+  color: var(--text-accent);
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* ---------- Game Area / Canvas ---------- */
+#game-area {
+  grid-area: canvas;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-playfield);
+}
+
+#game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- Overlay System ---------- */
+#overlay-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+
+.overlay-panel {
+  background: var(--bg-primary);
+  border: 4px solid var(--border-frame);
+  border-radius: 8px;
+  padding: 24px 32px;
+  min-width: 320px;
+  max-width: 600px;
+  box-shadow: 4px 4px 0 var(--border-dark);
+  text-align: center;
+}
+
+.overlay-panel h2 {
+  font-family: var(--font-game);
+  font-size: 24px;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.overlay-panel p {
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 16px;
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: bold;
+  border: 2px outset var(--border-light);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: filter 0.1s;
+}
+
+.btn:hover {
+  filter: brightness(1.1);
+}
+
+.btn:active {
+  border-style: inset;
+}
+
+.btn-primary {
+  background: var(--bg-controls);
+  color: var(--text-light);
+}
+
+.btn-success {
+  background: var(--color-success);
+  color: var(--text-light);
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 4px;
+  font-size: 18px;
+  border-radius: 4px;
+  background: var(--bg-toolbox);
+  color: var(--text-light);
+}
+
+/* ---------- Selection / Edit Mode ---------- */
+.object-selected {
+  outline: 2px dashed var(--text-accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  :root {
+    --toolbox-width: 160px;
+    --control-bar-height: 44px;
+  }
+
+  #game-title {
+    font-size: 14px;
+  }
+
+  .toolbox-item-icon {
+    width: 28px;
+    height: 28px;
+  }
+}

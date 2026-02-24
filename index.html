@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="The Incredible Machine — a web-based Rube Goldberg puzzle game inspired by the 1993 classic." />
+  <title>The Incredible Machine</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Top control bar -->
+    <header id="control-bar">
+      <div id="level-info">
+        <h1 id="game-title">The Incredible Machine</h1>
+        <span id="level-name"></span>
+      </div>
+      <div id="play-controls"></div>
+    </header>
+
+    <!-- Left toolbox panel -->
+    <aside id="toolbox">
+      <h2>Parts</h2>
+      <div id="toolbox-categories"></div>
+    </aside>
+
+    <!-- Main game canvas -->
+    <main id="game-area">
+      <canvas id="game-canvas"></canvas>
+    </main>
+
+    <!-- Overlays (hidden by default) -->
+    <div id="overlay-container" class="hidden">
+      <div id="goal-overlay" class="overlay-panel hidden"></div>
+      <div id="level-select-overlay" class="overlay-panel hidden"></div>
+      <div id="editor-overlay" class="overlay-panel hidden"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

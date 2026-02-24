@@ -1,0 +1,15 @@
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+    root: '.',
+    publicDir: 'public',
+    build: {
+        outDir: 'dist',
+    },
+    server: {
+        open: true,
+    },
+    test: {
+        globals: true,
+    },
+});

@@ -1,0 +1,34 @@
+{
+    "id": "level-01",
+    "name": "First Steps",
+    "description": "Get the bowling ball into the bucket",
+    "difficulty": 1,
+    "goal": {
+        "type": "object_in_zone",
+        "targetType": "ball",
+        "zoneId": "bucket-1"
+    },
+    "fixedObjects": [
+        {
+            "type": "bucket",
+            "x": 700,
+            "y": 500,
+            "angle": 0,
+            "id": "bucket-1"
+        },
+        {
+            "type": "ramp",
+            "x": 300,
+            "y": 200,
+            "angle": -0.3
+        }
+    ],
+    "availableParts": {
+        "ball": 1,
+        "ramp": 2,
+        "trampoline": 1
+    },
+    "hints": [
+        "Try placing the ball above the ramp so it rolls down into the bucket."
+    ]
+}
