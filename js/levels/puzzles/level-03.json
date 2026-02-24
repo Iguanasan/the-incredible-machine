@@ -1,0 +1,35 @@
+{
+    "id": "level-03",
+    "name": "Chain Reaction",
+    "description": "Set up a domino chain that triggers a fan to blow the ball into the bucket.",
+    "difficulty": 3,
+    "goal": {
+        "type": "object_in_zone",
+        "targetType": "ball",
+        "zoneId": "bucket-goal"
+    },
+    "fixedObjects": [
+        {
+            "type": "bucket",
+            "x": 800,
+            "y": 480,
+            "angle": 0,
+            "id": "bucket-goal"
+        },
+        {
+            "type": "ramp",
+            "x": 400,
+            "y": 350,
+            "angle": 0,
+            "isFixed": true
+        }
+    ],
+    "availableParts": {
+        "domino": 3,
+        "fan": 1,
+        "ball": 1
+    },
+    "hints": [
+        "Line up the dominoes on the ramp. Place the fan so the last domino activates it, then position the ball where the fan's wind will push it into the bucket."
+    ]
+}

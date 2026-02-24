@@ -1,0 +1,35 @@
+{
+    "id": "level-05",
+    "name": "Mouse Trap",
+    "description": "The mouse walks onto a spring and gets launched into the bucket. Guide its flight!",
+    "difficulty": 4,
+    "goal": {
+        "type": "object_in_zone",
+        "targetType": "mouse",
+        "zoneId": "bucket-goal"
+    },
+    "fixedObjects": [
+        {
+            "type": "bucket",
+            "x": 750,
+            "y": 200,
+            "angle": 0,
+            "id": "bucket-goal"
+        },
+        {
+            "type": "ramp",
+            "x": 100,
+            "y": 400,
+            "angle": -0.15,
+            "isFixed": true
+        }
+    ],
+    "availableParts": {
+        "mouse": 1,
+        "spring": 1,
+        "ramp": 2
+    },
+    "hints": [
+        "Place the spring at the end of the fixed ramp. Put the mouse at the top of the ramp so it walks down to the spring. Use additional ramps to guide the launched mouse to the bucket."
+    ]
+}

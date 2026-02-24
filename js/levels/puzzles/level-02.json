@@ -1,0 +1,35 @@
+{
+    "id": "level-02",
+    "name": "Across the Gap",
+    "description": "The bucket is across a wide gap. Use ramps and a trampoline to bounce the ball over!",
+    "difficulty": 2,
+    "goal": {
+        "type": "object_in_zone",
+        "targetType": "ball",
+        "zoneId": "bucket-goal"
+    },
+    "fixedObjects": [
+        {
+            "type": "bucket",
+            "x": 780,
+            "y": 480,
+            "angle": 0,
+            "id": "bucket-goal"
+        },
+        {
+            "type": "ramp",
+            "x": 150,
+            "y": 200,
+            "angle": -0.25,
+            "isFixed": true
+        }
+    ],
+    "availableParts": {
+        "ball": 1,
+        "ramp": 2,
+        "trampoline": 1
+    },
+    "hints": [
+        "Place the trampoline at the bottom of the first ramp, then angle a second ramp to catch the bounced ball and guide it into the bucket."
+    ]
+}

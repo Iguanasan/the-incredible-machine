@@ -6,6 +6,16 @@
  */
 
 import { eventBus } from './EventBus.js';
+import { registerMockObjects } from './testing/MockObjects.js';
+import { renderer } from './render/Renderer.js';
+import { toolbox } from './ui/Toolbox.js';
+import { playControls } from './ui/PlayControls.js';
+import { levelManager } from './levels/LevelManager.js';
+import { goalOverlay } from './ui/GoalOverlay.js';
+import { levelSelect } from './ui/LevelSelect.js';
+import { editorPanel } from './ui/EditorPanel.js';
+import { dragDropManager } from './ui/DragDropManager.js';
+import { objectRegistry } from './objects/ObjectRegistry.js';
 
 // ──────────────────────────────────────────────
 // Application Modes
@@ -25,6 +35,10 @@ export const AppMode = Object.freeze({
 const state = {
     mode: AppMode.MENU,
     currentLevelId: null,
+    /** @type {import('./objects/BaseObject.js').default[]} */
+    placedObjects: [],
+    /** Saved snapshot of placed objects for reset */
+    _savedPlacedSnapshot: [],
 };
 
 /**
@@ -74,73 +88,163 @@ function init() {
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // ── Module initialization order ──
-    // These will be uncommented as modules are implemented:
-    // 1. PhysicsEngine.init(canvas.width, canvas.height)
-    // 2. Renderer.init(canvas)
-    // 3. Toolbox.init()
-    // 4. PlayControls.init()
-    // 5. LevelManager.init()
-    // 6. GameLoop.init()
+    // ── Register mock objects for testing ──
+    registerMockObjects();
 
-    // For now, draw a placeholder to confirm everything is wired up
-    const ctx = canvas.getContext('2d');
-    drawPlaceholder(ctx, canvas.width, canvas.height);
+    // ── Module initialization order ──
+    // 1. Renderer
+    renderer.init(canvas);
+    renderer.setObjects(state.placedObjects);
+
+    // 2. Toolbox
+    toolbox.init();
+
+    // 3. Play Controls
+    playControls.init();
+
+    // 4. Level Manager
+    levelManager.init();
+
+    // 5. Goal Overlay
+    goalOverlay.init();
+
+    // 6. Level Select
+    levelSelect.init();
+
+    // 7. Editor Panel
+    editorPanel.init();
+
+    // 8. Drag-and-Drop (after Renderer + Toolbox)
+    dragDropManager.init(state.placedObjects);
+
+    // ── Wire up mode transition events ──
+    _wireEvents();
+
+    // ── Start render loop ──
+    renderer.startLoop();
+
+    // ── Show level select on start ──
+    setMode(AppMode.MENU);
 
     console.log('✅ The Incredible Machine — Ready!');
     eventBus.emit('app:ready');
 }
 
-/**
- * Draw a placeholder screen to confirm the canvas is working.
- */
-function drawPlaceholder(ctx, w, h) {
-    // Playfield background
-    ctx.fillStyle = '#e8e0d0';
-    ctx.fillRect(0, 0, w, h);
+// ──────────────────────────────────────────────
+// Event Wiring — mode transitions
+// ──────────────────────────────────────────────
+function _wireEvents() {
+    // Play button → PLAYING
+    eventBus.on('controls:play', () => {
+        const mode = getMode();
+        if (mode === 'EDITING' || mode === 'PAUSED' || mode === 'SANDBOX') {
+            // Snapshot placed objects before first play (for reset)
+            if (mode === 'EDITING' || mode === 'SANDBOX') {
+                state._savedPlacedSnapshot = state.placedObjects.map(o => o.serialize());
+            }
+            setMode(AppMode.PLAYING);
+        }
+    });
 
-    // Title text
-    ctx.fillStyle = '#404040';
-    ctx.font = 'bold 28px Georgia, serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('The Incredible Machine', w / 2, h / 2 - 30);
+    // Pause button → PAUSED
+    eventBus.on('controls:pause', () => {
+        if (getMode() === 'PLAYING') {
+            setMode(AppMode.PAUSED);
+        }
+    });
 
-    ctx.font = '16px Arial, sans-serif';
-    ctx.fillStyle = '#808080';
-    ctx.fillText('Setting up the workshop...', w / 2, h / 2 + 10);
+    // Reset button → back to EDITING (restore snapshot)
+    eventBus.on('controls:reset', () => {
+        const mode = getMode();
+        if (mode === 'PLAYING' || mode === 'PAUSED' || mode === 'WON') {
+            _resetLevel();
+        }
+    });
 
-    // Draw a small gear icon
-    drawGearIcon(ctx, w / 2, h / 2 + 60, 20);
+    // Level loaded → set up the board
+    eventBus.on('level:loaded', (levelData) => {
+        state.currentLevelId = levelData.id;
+        _setupLevel(levelData);
+
+        // Update the level name in the header
+        const levelNameEl = document.getElementById('level-name');
+        if (levelNameEl) {
+            levelNameEl.textContent = `${levelData.name}`;
+        }
+    });
+
+    // Next level
+    eventBus.on('overlay:next-level', async ({ levelId }) => {
+        try {
+            await levelManager.loadLevel(levelId);
+            setMode(AppMode.EDITING);
+        } catch (e) {
+            console.error('[App] Failed to load next level:', e);
+        }
+    });
+
+    // Retry → reset the level
+    eventBus.on('overlay:retry', () => {
+        _resetLevel();
+    });
+
+    // Back to menu
+    eventBus.on('overlay:menu', () => {
+        state.placedObjects.length = 0;
+        renderer.setObjects(state.placedObjects);
+        setMode(AppMode.MENU);
+    });
 }
 
 /**
- * Draw a simple gear icon as a visual indicator.
+ * Set up a level — load fixed objects onto the board.
  */
-function drawGearIcon(ctx, cx, cy, r) {
-    ctx.save();
-    ctx.strokeStyle = '#6060a0';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    const teeth = 8;
-    for (let i = 0; i < teeth; i++) {
-        const angle = (i / teeth) * Math.PI * 2;
-        const outerR = r;
-        const innerR = r * 0.65;
-        const halfTooth = Math.PI / teeth * 0.4;
+function _setupLevel(levelData) {
+    // Clear existing objects
+    state.placedObjects.length = 0;
 
-        ctx.lineTo(cx + Math.cos(angle - halfTooth) * innerR, cy + Math.sin(angle - halfTooth) * innerR);
-        ctx.lineTo(cx + Math.cos(angle - halfTooth) * outerR, cy + Math.sin(angle - halfTooth) * outerR);
-        ctx.lineTo(cx + Math.cos(angle + halfTooth) * outerR, cy + Math.sin(angle + halfTooth) * outerR);
-        ctx.lineTo(cx + Math.cos(angle + halfTooth) * innerR, cy + Math.sin(angle + halfTooth) * innerR);
+    // Create fixed objects from level data
+    if (levelData.fixedObjects) {
+        for (const objData of levelData.fixedObjects) {
+            try {
+                const obj = objectRegistry.create(objData.type, objData.x, objData.y, {
+                    angle: objData.angle || 0,
+                    isFixed: true,
+                });
+                // Preserve goal-referenced IDs
+                if (objData.id) {
+                    obj._goalId = objData.id;
+                }
+                state.placedObjects.push(obj);
+            } catch (e) {
+                console.warn(`[App] Could not create fixed object: ${objData.type}`, e);
+            }
+        }
     }
-    ctx.closePath();
-    ctx.stroke();
 
-    ctx.beginPath();
-    ctx.arc(cx, cy, r * 0.25, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
+    renderer.setObjects(state.placedObjects);
+    state._savedPlacedSnapshot = [];
+}
+
+/**
+ * Reset the current level — remove player-placed objects, re-setup.
+ */
+function _resetLevel() {
+    const levelData = levelManager.getCurrentLevel();
+    const previousMode = getMode();
+
+    if (levelData) {
+        _setupLevel(levelData);
+
+        // Determine which mode to return to
+        if (previousMode === 'WON' || previousMode === 'PLAYING' || previousMode === 'PAUSED') {
+            setMode(state.currentLevelId ? AppMode.EDITING : AppMode.SANDBOX);
+        }
+    } else {
+        // Sandbox mode — just clear non-fixed objects
+        dragDropManager.clearPlacedObjects();
+        setMode(AppMode.SANDBOX);
+    }
 }
 
 // Boot the app when DOM is ready
