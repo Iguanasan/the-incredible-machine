@@ -6,7 +6,9 @@
  */
 
 import { eventBus } from './EventBus.js';
-import { registerMockObjects } from './testing/MockObjects.js';
+import { registerAllObjects } from './objects/registerAllObjects.js';
+import { PhysicsEngine } from './engine/PhysicsEngine.js';
+import { GameLoop } from './engine/GameLoop.js';
 import { renderer } from './render/Renderer.js';
 import { toolbox } from './ui/Toolbox.js';
 import { playControls } from './ui/PlayControls.js';
@@ -39,6 +41,10 @@ const state = {
     placedObjects: [],
     /** Saved snapshot of placed objects for reset */
     _savedPlacedSnapshot: [],
+    /** @type {PhysicsEngine|null} */
+    physicsEngine: null,
+    /** @type {GameLoop|null} */
+    gameLoop: null,
 };
 
 /**
@@ -88,8 +94,16 @@ function init() {
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // ── Register mock objects for testing ──
-    registerMockObjects();
+    // ── Register ALL real game objects ──
+    registerAllObjects();
+
+    // ── Create physics engine and game loop ──
+    state.physicsEngine = new PhysicsEngine(canvas.width, canvas.height);
+    state.gameLoop = new GameLoop(state.physicsEngine, () => {
+        // On each frame, sync physics body positions → object positions
+        // (objects reference bodies directly, so positions update automatically)
+        renderer.render();
+    });
 
     // ── Module initialization order ──
     // 1. Renderer
@@ -141,7 +155,14 @@ function _wireEvents() {
             // Snapshot placed objects before first play (for reset)
             if (mode === 'EDITING' || mode === 'SANDBOX') {
                 state._savedPlacedSnapshot = state.placedObjects.map(o => o.serialize());
+                // Add all placed objects to the physics world
+                state.physicsEngine.clear();
+                for (const obj of state.placedObjects) {
+                    state.physicsEngine.addObject(obj);
+                }
+                state.physicsEngine.takeSnapshot();
             }
+            state.gameLoop.play();
             setMode(AppMode.PLAYING);
         }
     });
@@ -149,6 +170,7 @@ function _wireEvents() {
     // Pause button → PAUSED
     eventBus.on('controls:pause', () => {
         if (getMode() === 'PLAYING') {
+            state.gameLoop.pause();
             setMode(AppMode.PAUSED);
         }
     });
@@ -157,6 +179,9 @@ function _wireEvents() {
     eventBus.on('controls:reset', () => {
         const mode = getMode();
         if (mode === 'PLAYING' || mode === 'PAUSED' || mode === 'WON') {
+            state.gameLoop.reset();
+            state.physicsEngine.restoreSnapshot();
+            state.physicsEngine.clearSnapshot();
             _resetLevel();
         }
     });
