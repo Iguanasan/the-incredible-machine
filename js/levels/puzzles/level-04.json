@@ -1,0 +1,35 @@
+{
+    "id": "level-04",
+    "name": "Lighter Than Air",
+    "description": "Use balloons and a rope to lift a platform so the ball can roll into the bucket.",
+    "difficulty": 3,
+    "goal": {
+        "type": "object_in_zone",
+        "targetType": "ball",
+        "zoneId": "bucket-goal"
+    },
+    "fixedObjects": [
+        {
+            "type": "bucket",
+            "x": 750,
+            "y": 480,
+            "angle": 0,
+            "id": "bucket-goal"
+        },
+        {
+            "type": "ramp",
+            "x": 200,
+            "y": 300,
+            "angle": 0,
+            "isFixed": true
+        }
+    ],
+    "availableParts": {
+        "balloon": 2,
+        "rope": 1,
+        "ball": 1
+    },
+    "hints": [
+        "Attach the balloons to the rope, then connect the rope to the fixed ramp to lift it. Place the ball so it rolls down the raised ramp into the bucket."
+    ]
+}
