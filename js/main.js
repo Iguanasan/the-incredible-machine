@@ -100,8 +100,8 @@ function init() {
     // ── Create physics engine and game loop ──
     state.physicsEngine = new PhysicsEngine(canvas.width, canvas.height);
     state.gameLoop = new GameLoop(state.physicsEngine, () => {
-        // On each frame, sync physics body positions → object positions
-        // (objects reference bodies directly, so positions update automatically)
+        // GameLoop drives rendering during play — renderer.startLoop()
+        // handles the edit-mode loop (see below).
         renderer.render();
     });
 
@@ -134,7 +134,7 @@ function init() {
     // ── Wire up mode transition events ──
     _wireEvents();
 
-    // ── Start render loop ──
+    // ── Start render loop (paused once GameLoop takes over) ──
     renderer.startLoop();
 
     // ── Show level select on start ──
@@ -152,7 +152,7 @@ function _wireEvents() {
     eventBus.on('controls:play', () => {
         const mode = getMode();
         if (mode === 'EDITING' || mode === 'PAUSED' || mode === 'SANDBOX') {
-            // Snapshot placed objects before first play (for reset)
+            // On first play (not resume), add objects to physics world
             if (mode === 'EDITING' || mode === 'SANDBOX') {
                 state._savedPlacedSnapshot = state.placedObjects.map(o => o.serialize());
                 // Add all placed objects to the physics world
@@ -160,8 +160,10 @@ function _wireEvents() {
                 for (const obj of state.placedObjects) {
                     state.physicsEngine.addObject(obj);
                 }
-                state.physicsEngine.takeSnapshot();
+                // GameLoop.play() calls takeSnapshot() when STOPPED
             }
+            // Stop renderer's own loop — GameLoop will drive rendering
+            renderer.stopLoop();
             state.gameLoop.play();
             setMode(AppMode.PLAYING);
         }
@@ -171,6 +173,8 @@ function _wireEvents() {
     eventBus.on('controls:pause', () => {
         if (getMode() === 'PLAYING') {
             state.gameLoop.pause();
+            // Restart renderer loop for edit-mode rendering
+            renderer.startLoop();
             setMode(AppMode.PAUSED);
         }
     });
@@ -179,9 +183,10 @@ function _wireEvents() {
     eventBus.on('controls:reset', () => {
         const mode = getMode();
         if (mode === 'PLAYING' || mode === 'PAUSED' || mode === 'WON') {
+            // GameLoop.reset() already restores snapshot + clears it
             state.gameLoop.reset();
-            state.physicsEngine.restoreSnapshot();
-            state.physicsEngine.clearSnapshot();
+            // Restart renderer loop for edit-mode rendering
+            renderer.startLoop();
             _resetLevel();
         }
     });
@@ -225,6 +230,9 @@ function _wireEvents() {
  * Set up a level — load fixed objects onto the board.
  */
 function _setupLevel(levelData) {
+    // Clear physics world (remove game objects, keep boundaries)
+    state.physicsEngine.clear();
+
     // Clear existing objects
     state.placedObjects.length = 0;
 
